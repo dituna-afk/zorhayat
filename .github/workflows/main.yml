@@ -19,10 +19,21 @@ jobs:
       - name: Gradle Kur
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Zip Cikar ve Derle
+      - name: Zip Cikar ve Duzeltmeleri Uygula
         run: |
           unzip -o deneme_fixed.zip
           cd deneme-main
+
+          # 1. Eksik debug.keystore olustur
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+          # 2. Kod cakismasini coz: YTDlpResolver.kt icindeki ikinci fonskiyonun adini degistir
+          TARGET_FILE="app/src/main/java/com/example/downloader/YTDlpResolver.kt"
+          if [ -f "$TARGET_FILE" ]; then
+            sed -i '0,/fun resolveAudioStreamWithYTDlp(videoId: String)/s//fun resolveAudioStreamByVideoId(videoId: String)/' "$TARGET_FILE"
+          fi
+
+          # 3. Derlemeyi baslat
           gradle assembleDebug --stacktrace
 
       - name: APK Yukle
